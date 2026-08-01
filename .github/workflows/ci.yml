@@ -22,7 +22,7 @@ jobs:
           java-version: "21"
       - uses: gradle/actions/setup-gradle@v4
       - name: Byte-compare both expected packs
-        run: ./gradlew :vault-core:jvmTest --stacktrace
+        run: ./gradlew :vault-core:jvmTest
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -43,14 +43,30 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
 
       - name: Build the app (NDK compiles the vendored C for arm64-v8a and x86_64)
-        run: ./gradlew :composeApp:assembleDebug --stacktrace
+        run: ./gradlew :composeApp:assembleDebug
 
       - name: "Record the APK's declared permissions (expected: none)"
         run: |
-          BUILD_TOOLS="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
-          "$BUILD_TOOLS/aapt2" dump badging \
-            composeApp/build/outputs/apk/debug/composeApp-debug.apk \
-            | tee android-permissions.txt
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          echo "SDK root: ${SDK:-<unset>}"
+          APK="$(find composeApp/build/outputs/apk -name '*.apk' | head -1)"
+          if [ -z "$APK" ]; then
+            echo "::error::No APK found under composeApp/build/outputs/apk"
+            find composeApp/build/outputs -type f | head -50
+            exit 1
+          fi
+          echo "APK: $APK"
+          AAPT2="$(find "$SDK/build-tools" -name aapt2 -type f 2>/dev/null | sort -V | tail -1)"
+          if [ -z "$AAPT2" ]; then
+            echo "::error::aapt2 not found under $SDK/build-tools"
+            ls -la "$SDK/build-tools" || true
+            exit 1
+          fi
+          echo "aapt2: $AAPT2"
+          "$AAPT2" dump badging "$APK" > android-permissions.txt
+          echo "--- permissions declared ---"
+          grep -E "uses-permission|^package" android-permissions.txt || echo "(none)"
           if grep -q "uses-permission" android-permissions.txt; then
             echo "::error::The APK declares a permission. This app must declare none."
             exit 1
@@ -69,7 +85,7 @@ jobs:
           api-level: 34
           arch: x86_64
           target: google_apis
-          script: ./gradlew :vault-interop:connectedAndroidTest --stacktrace
+          script: ./gradlew :vault-interop:connectedAndroidTest
 
       - uses: actions/upload-artifact@v4
         if: always()
@@ -97,13 +113,13 @@ jobs:
       - name: Build the vendored C for both Apple targets
         run: |
           ./gradlew :vault-interop:buildAppleNativeIosSimulatorArm64 \
-                    :vault-interop:buildAppleNativeIosArm64 --stacktrace
+                    :vault-interop:buildAppleNativeIosArm64
 
       - name: Cinterop conformance on the simulator
-        run: ./gradlew :vault-interop:iosSimulatorArm64Test --stacktrace
+        run: ./gradlew :vault-interop:iosSimulatorArm64Test
 
       - name: Link the device (iphoneos) framework — compile+link only, never executed here
-        run: ./gradlew :composeApp:linkDebugFrameworkIosArm64 --stacktrace
+        run: ./gradlew :composeApp:linkDebugFrameworkIosArm64
 
       - uses: actions/upload-artifact@v4
         if: always()

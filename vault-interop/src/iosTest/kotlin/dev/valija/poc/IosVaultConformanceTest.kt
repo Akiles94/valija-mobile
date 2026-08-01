@@ -22,8 +22,6 @@ import platform.posix.fopen
 import platform.posix.fread
 import platform.posix.fseek
 import platform.posix.ftell
-import platform.posix.getenv
-import kotlinx.cinterop.toKString
 import platform.posix.rewind
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -42,8 +40,9 @@ import kotlin.test.assertTrue
 @OptIn(ExperimentalForeignApi::class)
 class IosVaultConformanceTest {
 
-    private val fixtures: String = getenv("VALIJA_FIXTURES")?.toKString()
-        ?: error("VALIJA_FIXTURES is not set; see vault-interop/build.gradle.kts")
+    // Baked in at build time by :vault-interop:generateTestFixturesPath -- an environment
+    // variable would not survive the `simctl` hop into the simulator.
+    private val fixtures: String = FIXTURES_PATH
 
     private fun readBytes(name: String): ByteArray {
         val path = "$fixtures/$name"
