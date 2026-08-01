@@ -3,15 +3,16 @@ package dev.valija.poc.infra.sqlite
 import dev.valija.poc.domain.VaultErrorCodes
 import dev.valija.poc.domain.vaultErr
 import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.CFunction
+import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.CPointerVar
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.alloc
-import kotlinx.cinterop.cstr
-import kotlinx.cinterop.getPointer
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.reinterpret
+import kotlinx.cinterop.toCPointer
 import kotlinx.cinterop.toKString
 import kotlinx.cinterop.value
 import sqlite3mc.SQLITE_NULL
@@ -44,6 +45,17 @@ import sqlite3mc.sqlite3_stmt
 actual class Sqlite3mcDatabase actual constructor(path: String, keyHex: String) {
 
     private var handle: CPointer<sqlite3>? = null
+
+    private companion object {
+        /**
+         * The Kotlin/Native form of SQLite's `SQLITE_TRANSIENT` macro
+         * (`(sqlite3_destructor_type)-1`). It is a cast expression in the C header, not a plain
+         * constant, so cinterop cannot extract it — this reconstructs the same bit pattern by
+         * hand, the documented approach for this exact, well-known SQLite/Kotlin-Native gap.
+         */
+        val SQLITE_TRANSIENT: CPointer<CFunction<(COpaquePointer?) -> Unit>>? =
+            (-1L).toCPointer()
+    }
 
     init {
         if (keyHex.length != 64) {
@@ -92,10 +104,16 @@ actual class Sqlite3mcDatabase actual constructor(path: String, keyHex: String) 
 
             try {
                 args.forEachIndexed { index, arg ->
-                    // The text is allocated in this memScoped arena, which outlives every step
-                    // and the finalize below, so SQLITE_STATIC (a null destructor) is safe and
-                    // avoids needing the SQLITE_TRANSIENT macro, which cinterop does not expose.
-                    sqlite3_bind_text(stmt, index + 1, arg.cstr.getPointer(this), -1, null)
+                    // cinterop maps the C `const char*` parameter to Kotlin String directly
+                    // (confirmed by the compiler: passing a raw CPointer here is a type
+                    // mismatch, not just unidiomatic) -- so there is no buffer of ours to manage
+                    // at all. What still matters is the *destructor* argument: SQLITE_TRANSIENT,
+                    // not SQLITE_STATIC (null) -- passing null tells SQLite the pointer behind
+                    // the string outlives this call, which is not guaranteed for a string
+                    // marshalled at the FFI boundary. SQLITE_TRANSIENT makes SQLite copy the
+                    // bytes before returning, which is correct regardless of how long the
+                    // marshalled buffer actually lives.
+                    sqlite3_bind_text(stmt, index + 1, arg, -1, SQLITE_TRANSIENT)
                 }
 
                 while (sqlite3_step(stmt) == SQLITE_ROW) {
