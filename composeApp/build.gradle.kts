@@ -35,13 +35,11 @@ kotlin {
 
 // androidx.activity/Compose pull in androidx.profileinstaller transitively -- a pure startup-time
 // perf optimization (ahead-of-time bytecode profile installation), entirely unrelated to the app's
-// own behaviour. Its manifest fragment declares a broadcast receiver and, on API 33+, AGP's
-// manifest merger auto-injects a self-scoped `<applicationId>.DYNAMIC_RECEIVER_NOT_EXPORTED_
-// PERMISSION` to guard it. That permission can never be granted TO this app by anything else and
-// grants no capability -- but this PoC's whole claim is "zero permissions, enforced by the
-// platform" (README.md, poc.md), and a real reader should not have to know that story to trust
-// the claim. Excluding the dependency keeps the promise literally true instead of documenting an
-// exception to it.
+// own behaviour and unneeded for a PoC that opens one bundled fixture. Excluded on general
+// principle: this module's whole point is a minimal, auditable dependency surface. It does NOT,
+// on its own, remove the DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION self-permission a real CI run
+// showed in the merged manifest even with this exclusion in place -- that one comes from
+// androidx.core itself (unavoidable), and is handled explicitly in AndroidManifest.xml instead.
 configurations.configureEach {
     exclude(group = "androidx.profileinstaller", module = "profileinstaller")
 }

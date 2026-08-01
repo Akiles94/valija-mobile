@@ -1,13 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    There is deliberately NO <uses-permission> element of any kind in this manifest.
+    There is deliberately NO <uses-permission> element of any kind written in this manifest.
 
     Without android.permission.INTERNET the app cannot open a socket even if something in it
     tried to, so "makes no network requests" is enforced by the platform rather than promised by
     a code review. `aapt2 dump badging` on the built APK is the check, and its output is
     committed as evidence (advances/MOBILE/evidence/android-permissions.txt in valija).
+
+    The one exception the merger must be told about explicitly: androidx.core (an unavoidable
+    transitive dependency of androidx.activity-compose/Compose itself, not something a Gradle
+    exclusion can remove without breaking the build) carries its own manifest declaring
+    `<applicationId>.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, its API-33+ compat shim for
+    dynamically-registered broadcast receivers. It is self-scoped (nothing external can ever be
+    granted it) and grants no capability, but it would still show up in `aapt2 dump badging` and
+    contradict this PoC's platform-enforced "zero permissions" claim. tools:remove deletes it from
+    the merged manifest rather than leaving that story for a reader of the CI check to rediscover.
 -->
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission
+        android:name="dev.valija.poc.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+        tools:node="remove" />
 
     <application
         android:allowBackup="false"

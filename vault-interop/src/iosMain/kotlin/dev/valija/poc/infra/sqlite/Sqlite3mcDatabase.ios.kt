@@ -15,11 +15,12 @@ import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.toCPointer
 import kotlinx.cinterop.toKString
 import kotlinx.cinterop.value
+import cnames.structs.sqlite3
+import cnames.structs.sqlite3_stmt
 import sqlite3mc.SQLITE_NULL
 import sqlite3mc.SQLITE_OK
 import sqlite3mc.SQLITE_OPEN_READONLY
 import sqlite3mc.SQLITE_ROW
-import sqlite3mc.sqlite3
 import sqlite3mc.sqlite3_bind_text
 import sqlite3mc.sqlite3_close
 import sqlite3mc.sqlite3_column_count
@@ -31,9 +32,16 @@ import sqlite3mc.sqlite3_finalize
 import sqlite3mc.sqlite3_open_v2
 import sqlite3mc.sqlite3_prepare_v2
 import sqlite3mc.sqlite3_step
-import sqlite3mc.sqlite3_stmt
 
 /**
+ * `sqlite3` and `sqlite3_stmt` import from `cnames.structs`, not from the `sqlite3mc` package
+ * this file's other imports use. SQLite deliberately only forward-declares them
+ * (`typedef struct sqlite3 sqlite3;`, no body) so callers can never see or depend on the layout —
+ * and because cinterop never sees a full definition either, it cannot attribute the type to the
+ * `.def` file's own package the way it does for functions and constants. It places every such
+ * opaque struct in the shared `cnames.structs.<Name>` namespace instead, confirmed by the real
+ * compiler error this file failed with before this comment existed.
+ *
  * iOS's half of the seam: Kotlin/Native cinterop straight into the vendored amalgamation.
  *
  * Note the asymmetry with Android, which is the point of G3: there is **no hand-written C on
