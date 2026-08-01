@@ -1,0 +1,112 @@
+name: CI
+
+# This workflow lives in valija-mobile and only in valija-mobile. The valija repository gets no
+# mobile CI at all (P-11): its own ci.yml matrix must stay untouched and unslowed.
+on:
+  push:
+    branches: [main, "feat/**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # The drift gate. No SQLite, no C, no device, no emulator -- if this is red, no device run is
+  # worth taking.
+  domain:
+    name: Domain conformance (JVM)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Byte-compare both expected packs
+        run: ./gradlew :vault-core:jvmTest --stacktrace
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jvm-conformance
+          path: vault-core/build/reports/tests/jvmTest/
+
+  # NOTE: this job runs on an x86_64 emulator. It is NOT the arm64 evidence for G2 -- the
+  # physical-device run is. The job name and the log both say x86_64 so no reader can mistake it.
+  android:
+    name: Android build + x86_64 emulator (NOT arm64 evidence)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build the app (NDK compiles the vendored C for arm64-v8a and x86_64)
+        run: ./gradlew :composeApp:assembleDebug --stacktrace
+
+      - name: Record the APK's declared permissions (expected: none)
+        run: |
+          BUILD_TOOLS="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
+          "$BUILD_TOOLS/aapt2" dump badging \
+            composeApp/build/outputs/apk/debug/composeApp-debug.apk \
+            | tee android-permissions.txt
+          if grep -q "uses-permission" android-permissions.txt; then
+            echo "::error::The APK declares a permission. This app must declare none."
+            exit 1
+          fi
+
+      - name: Enable KVM for a natively-accelerated emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
+            | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: On-device conformance (x86_64 emulator)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          script: ./gradlew :vault-interop:connectedAndroidTest --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: android-x86_64-emulator
+          path: |
+            android-permissions.txt
+            vault-interop/build/reports/androidTests/
+            composeApp/build/outputs/apk/debug/
+
+  # NOTE: this job runs on the iOS *simulator*. arm64 ISA and real iOS frameworks, but the macOS
+  # kernel and a simulator runtime -- it proves nothing about code signing, entitlements, the
+  # Secure Enclave, background suspension, thermals or App Store review.
+  ios:
+    name: iOS simulator (NOT a physical device)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build the vendored C for both Apple targets
+        run: |
+          ./gradlew :vault-interop:buildAppleNativeIosSimulatorArm64 \
+                    :vault-interop:buildAppleNativeIosArm64 --stacktrace
+
+      - name: Cinterop conformance on the simulator
+        run: ./gradlew :vault-interop:iosSimulatorArm64Test --stacktrace
+
+      - name: Link the device (iphoneos) framework — compile+link only, never executed here
+        run: ./gradlew :composeApp:linkDebugFrameworkIosArm64 --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ios-simulator
+          path: vault-interop/build/reports/tests/
