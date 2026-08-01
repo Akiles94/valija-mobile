@@ -124,6 +124,18 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+        // kotlin-test is a genuinely multiplatform artifact (Gradle Module Metadata with a
+        // distinct androidJvm variant, not plain jvm), so it needs Kotlin-aware dependency
+        // resolution to pick the right one -- confirmed by a real CI run: adding it to the raw
+        // AGP `androidTestImplementation` configuration (dependencies {} block below, alongside
+        // androidx.test.runner, an ordinary single-platform artifact that resolves fine there)
+        // left `kotlin.test.Test`/`assertEquals`/`assertTrue` unresolved, because that
+        // configuration carries no Kotlin platform-type attribute. androidInstrumentedTest is
+        // the KMP source set AGP's androidTest maps to; declaring it here routes resolution
+        // through Kotlin's own attribute-aware machinery instead.
+        androidInstrumentedTest.dependencies {
+            implementation(libs.kotlin.test)
+        }
     }
 }
 
@@ -158,11 +170,8 @@ android {
 }
 
 dependencies {
-    // commonTest.dependencies { implementation(libs.kotlin.test) } above does NOT reach here --
-    // androidInstrumentedTest (device/emulator tests) is a separate Android-specific source set
-    // that AGP wires independently of Kotlin Multiplatform's own test hierarchy, confirmed by a
-    // real CI run: AndroidVaultConformanceTest.kt failed with "Unresolved reference 'Test'" /
-    // 'assertEquals' / 'assertTrue' despite that commonTest dependency already being declared.
-    androidTestImplementation(libs.kotlin.test)
+    // kotlin-test lives in the kotlin { sourceSets { androidInstrumentedTest.dependencies {} } }
+    // block above instead of here -- see the comment there for why. androidx.test.runner is an
+    // ordinary single-platform artifact, so the plain AGP configuration resolves it correctly.
     androidTestImplementation(libs.androidx.test.runner)
 }
