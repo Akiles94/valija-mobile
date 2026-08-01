@@ -104,8 +104,13 @@ kotlin {
         // `compilations.getByName("test").defaultSourceSet` sidesteps all of that: it is the
         // same API already used above for the "main" compilation's cinterop wiring, which is
         // proven to work in this file, on this project, on real CI.
+        //
+        // Only the generated fixtures-path directory is added here. `src/iosTest/kotlin` is NOT
+        // — a real CI run proved the shared `iosTest` source set does get created by the default
+        // hierarchy template after all, and Kotlin's own naming convention already wires it to
+        // that exact directory; adding it a second time here made IosVaultConformanceTest.kt a
+        // member of two source sets at once ("can be a part of only one module").
         compilations.getByName("test").defaultSourceSet {
-            kotlin.srcDir("src/iosTest/kotlin")
             kotlin.srcDir(generateTestFixturesPath)
         }
     }
