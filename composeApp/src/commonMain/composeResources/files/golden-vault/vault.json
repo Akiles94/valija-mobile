@@ -1,0 +1,12 @@
+{
+  "vaultId": "01JGOLDENVAULT0000000000",
+  "schemaVersion": 1,
+  "kdf": {
+    "algorithm": "argon2id",
+    "memoryKiB": 65536,
+    "iterations": 3,
+    "parallelism": 1
+  },
+  "saltBase64": "R29sZGVuVmF1bHRTYWx0IQ==",
+  "createdAt": "2026-07-26T00:00:00.000Z"
+}

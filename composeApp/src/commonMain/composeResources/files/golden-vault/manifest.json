@@ -1,0 +1,37 @@
+{
+  "fixtureVersion": 1,
+  "vaultId": "01JGOLDENVAULT0000000000",
+  "passphrase": "valija-golden-vault-public-test-passphrase",
+  "keyHex": "3e53d9f1d53beb152abeab88320e77a4fd9e5e878828a1c1aec4d0327d46dc67",
+  "saltBase64": "R29sZGVuVmF1bHRTYWx0IQ==",
+  "kdf": {
+    "algorithm": "argon2id",
+    "memoryKiB": 65536,
+    "iterations": 3,
+    "parallelism": 1
+  },
+  "schemaVersion": 3,
+  "headerSchemaVersion": 1,
+  "createdAt": "2026-07-26T00:00:00.000Z",
+  "generatedAt": "2026-07-26T12:00:00.000Z",
+  "packBudgetTokens": 150,
+  "searchLimitDefault": 20,
+  "deviceId": "01JGOLDENDEVICE000000000",
+  "writeStamp": "01JGOLDENWRITESTAMP00000",
+  "cipher": {
+    "cipher": "sqlcipher",
+    "page_size": 4096,
+    "kdf_iter": "256000",
+    "fast_kdf_iter": "2",
+    "hmac_use": "1",
+    "hmac_pgno": "1",
+    "hmac_salt_mask": "58",
+    "kdf_algorithm": "2",
+    "hmac_algorithm": "2",
+    "plaintext_header_size": "0",
+    "legacy": "0",
+    "legacy_page_size": "4096",
+    "cipher_salt": "EC9F1BEE32529ADFBD1D6A0A1AEA05AF"
+  },
+  "fileSaltHex": "EC9F1BEE32529ADFBD1D6A0A1AEA05AF"
+}

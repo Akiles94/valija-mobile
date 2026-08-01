@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    There is deliberately NO <uses-permission> element of any kind in this manifest.
+
+    Without android.permission.INTERNET the app cannot open a socket even if something in it
+    tried to, so "makes no network requests" is enforced by the platform rather than promised by
+    a code review. `aapt2 dump badging` on the built APK is the check, and its output is
+    committed as evidence (advances/MOBILE/evidence/android-permissions.txt in valija).
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application
+        android:allowBackup="false"
+        android:label="valija PoC"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+        <activity
+            android:name="dev.valija.poc.MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
