@@ -92,27 +92,26 @@ kotlin {
         compilations.getByName("main").compileTaskProvider.configure {
             dependsOn(nativeTaskName)
         }
+    }
 
-        // Deliberately not a name-based lookup (`sourceSets.named("iosTest")` or
-        // `sourceSets { val iosArm64Test by getting }`) — both failed on a real CI run in this
-        // exact multi-module project, one with "KotlinSourceSet ... not found" (the shared
-        // intermediate source set the default hierarchy template creates isn't ready yet when
-        // this file's sourceSets {} block evaluates) and the other with a raw NPE inside
-        // Gradle's own `by getting` delegate machinery once androidTarget() was also in the mix
-        // — neither reproduced in an isolated jvm+iOS-only probe, since this sandbox cannot
-        // configure androidTarget() at all (blocked Google Maven) to test the real combination.
-        // `compilations.getByName("test").defaultSourceSet` sidesteps all of that: it is the
-        // same API already used above for the "main" compilation's cinterop wiring, which is
-        // proven to work in this file, on this project, on real CI.
-        //
-        // Only the generated fixtures-path directory is added here. `src/iosTest/kotlin` is NOT
-        // — a real CI run proved the shared `iosTest` source set does get created by the default
-        // hierarchy template after all, and Kotlin's own naming convention already wires it to
-        // that exact directory; adding it a second time here made IosVaultConformanceTest.kt a
-        // member of two source sets at once ("can be a part of only one module").
-        compilations.getByName("test").defaultSourceSet {
-            kotlin.srcDir(generateTestFixturesPath)
-        }
+    // IosVaultConformanceTest.kt lives in src/iosTest/kotlin -- the shared source set the default
+    // hierarchy template wires as the *parent* of both iosArm64Test and iosSimulatorArm64Test.
+    // Visibility runs child-sees-parent, never the reverse, so a real CI run proved that adding
+    // the generated fixtures directory to each leaf target's own `test` compilation
+    // (`compilations.getByName("test").defaultSourceSet`, as this file did before) is invisible
+    // to iosTest itself: the leaf source set compiled fine, but IosVaultConformanceTest.kt failed
+    // with "Unresolved reference 'FIXTURES_PATH'". The constant has to be a source root of
+    // iosTest, the same source set the test class is actually in.
+    //
+    // Not a name-based lookup (`sourceSets.named("iosTest")` or `sourceSets { val iosTest by
+    // getting }`) — both are known, from an earlier real CI failure in this exact project, to
+    // validate the name eagerly and fail with "not found" because the default hierarchy template
+    // creates iosTest asynchronously relative to this script's own top-level evaluation.
+    // `matching { }.configureEach { }` is Gradle's live-collection filter: it never checks for
+    // present existence, only observes elements as they are added, so it configures iosTest
+    // whenever it actually appears.
+    sourceSets.matching { it.name == "iosTest" }.configureEach {
+        kotlin.srcDir(generateTestFixturesPath)
     }
 
     sourceSets {
@@ -159,5 +158,11 @@ android {
 }
 
 dependencies {
+    // commonTest.dependencies { implementation(libs.kotlin.test) } above does NOT reach here --
+    // androidInstrumentedTest (device/emulator tests) is a separate Android-specific source set
+    // that AGP wires independently of Kotlin Multiplatform's own test hierarchy, confirmed by a
+    // real CI run: AndroidVaultConformanceTest.kt failed with "Unresolved reference 'Test'" /
+    // 'assertEquals' / 'assertTrue' despite that commonTest dependency already being declared.
+    androidTestImplementation(libs.kotlin.test)
     androidTestImplementation(libs.androidx.test.runner)
 }
