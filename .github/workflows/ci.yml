@@ -45,7 +45,7 @@ jobs:
       - name: Build the app (NDK compiles the vendored C for arm64-v8a and x86_64)
         run: ./gradlew :composeApp:assembleDebug --stacktrace
 
-      - name: Record the APK's declared permissions (expected: none)
+      - name: "Record the APK's declared permissions (expected: none)"
         run: |
           BUILD_TOOLS="$(ls -d "$ANDROID_HOME"/build-tools/* | sort -V | tail -1)"
           "$BUILD_TOOLS/aapt2" dump badging \
