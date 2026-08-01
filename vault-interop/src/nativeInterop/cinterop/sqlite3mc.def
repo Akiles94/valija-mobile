@@ -1,0 +1,7 @@
+package = sqlite3mc
+headers = sqlite3.h
+headerFilter = sqlite3.h
+
+# The archive itself is linked by the final binary (see build.gradle.kts's linkerOpts), not
+# embedded here: both this and argon2.def sit over the SAME libvalijanative.a, so embedding it
+# in each klib would link the same objects twice.

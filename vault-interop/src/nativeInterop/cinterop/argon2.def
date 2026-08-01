@@ -1,0 +1,6 @@
+package = argon2
+headers = argon2.h
+headerFilter = argon2.h
+
+# Two .def files over one archive: it keeps each Kotlin package honest about which C library its
+# declarations came from, which matters when the same binary carries two of them.
