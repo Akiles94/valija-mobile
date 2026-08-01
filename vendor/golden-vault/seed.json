@@ -1,0 +1,151 @@
+{
+  "projects": [
+    {
+      "id": "proj-alpha",
+      "name": "alpha",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "updatedAt": "2026-01-01T00:00:00.000Z"
+    },
+    {
+      "id": "proj-beta",
+      "name": "beta",
+      "createdAt": "2026-01-02T00:00:00.000Z",
+      "updatedAt": "2026-01-02T00:00:00.000Z"
+    }
+  ],
+  "items": [
+    {
+      "id": "item-a01",
+      "projectId": "proj-alpha",
+      "type": "decision",
+      "content": "We chose SQLCipher for at-rest encryption; it lets the same vault.db file live inside a synced folder without ever exposing plaintext to the sync client.",
+      "tags": ["security", "storage"],
+      "pinned": false,
+      "archived": false,
+      "createdAt": "2026-01-01T01:00:00.000Z",
+      "updatedAt": "2026-01-01T01:00:00.000Z"
+    },
+    {
+      "id": "item-a02",
+      "projectId": "proj-alpha",
+      "type": "preference",
+      "content": "Prefer terse commit messages over verbose ones.",
+      "tags": [],
+      "pinned": false,
+      "archived": false,
+      "createdAt": "2026-01-01T02:00:00.000Z",
+      "updatedAt": "2026-01-01T02:00:00.000Z"
+    },
+    {
+      "id": "item-a03",
+      "projectId": "proj-alpha",
+      "type": "progress",
+      "content": "Implemented the pack renderer.\n\nNext: wire the CLI export command.\n\nNote: café ☕ still needs unicode testing.",
+      "tags": ["cli"],
+      "pinned": false,
+      "archived": false,
+      "createdAt": "2026-01-01T03:00:00.000Z",
+      "updatedAt": "2026-01-01T03:00:00.000Z"
+    },
+    {
+      "id": "item-a04",
+      "projectId": "proj-alpha",
+      "type": "fact",
+      "content": "The vault's schema is currently at version 3 — search scoping is verified per project.",
+      "tags": [],
+      "pinned": false,
+      "archived": false,
+      "createdAt": "2026-01-01T04:00:00.000Z",
+      "updatedAt": "2026-01-01T04:00:00.000Z"
+    },
+    {
+      "id": "item-a05",
+      "projectId": "proj-alpha",
+      "type": "handoff",
+      "content": "Old handoff: don't use this one, it has been superseded.",
+      "tags": [],
+      "pinned": false,
+      "archived": false,
+      "createdAt": "2026-01-01T05:00:00.000Z",
+      "updatedAt": "2026-01-01T05:00:00.000Z"
+    },
+    {
+      "id": "item-a06",
+      "projectId": "proj-alpha",
+      "type": "handoff",
+      "content": "Handoff: the golden vault fixture is ready for the conformance test; next step is the cipher-parameter probe.",
+      "tags": ["handoff"],
+      "pinned": false,
+      "archived": false,
+      "createdAt": "2026-01-01T06:00:00.000Z",
+      "updatedAt": "2026-01-01T06:00:00.000Z"
+    },
+    {
+      "id": "item-a07",
+      "projectId": "proj-alpha",
+      "type": "fact",
+      "content": "Pinned note: keep the fixture's passphrase published and clearly documented as public test data, never real.",
+      "tags": ["pinned"],
+      "pinned": true,
+      "archived": false,
+      "createdAt": "2026-01-01T07:00:00.000Z",
+      "updatedAt": "2026-01-01T07:00:00.000Z"
+    },
+    {
+      "id": "item-a08",
+      "projectId": "proj-alpha",
+      "type": "decision",
+      "content": "This is the deliberately long pinned note used to prove the over-budget-pinned rule: the newest pinned item in a project must always be included in a budgeted context pack, even when its own size alone exceeds the configured token budget, and every older pinned item must then be cut starting with the oldest one first. The fixture's tight pack budget is only one hundred fifty estimated tokens, which corresponds to roughly six hundred characters once the per-item metadata prefix (its type, its creation date, and its tags) is accounted for alongside this body text, so this paragraph is written to comfortably exceed that threshold on its own before any other section of the pack is even considered for inclusion, giving the conformance test a wide, dependency-proof margin against small changes to the token-estimate formula.",
+      "tags": ["pinned", "long"],
+      "pinned": true,
+      "archived": false,
+      "createdAt": "2026-01-01T08:00:00.000Z",
+      "updatedAt": "2026-01-01T08:00:00.000Z"
+    },
+    {
+      "id": "item-a09",
+      "projectId": "proj-alpha",
+      "type": "fact",
+      "content": "This item is archived and must never appear in search results or in a rendered context pack.",
+      "tags": [],
+      "pinned": false,
+      "archived": true,
+      "createdAt": "2026-01-01T09:00:00.000Z",
+      "updatedAt": "2026-01-01T09:00:00.000Z"
+    },
+    {
+      "id": "item-a10",
+      "projectId": "proj-alpha",
+      "type": "imported",
+      "content": "Imported conversation snippet: discussed database choices with the assistant.",
+      "tags": [],
+      "pinned": false,
+      "archived": false,
+      "source": "chatgpt-import",
+      "createdAt": "2026-01-01T10:00:00.000Z",
+      "updatedAt": "2026-01-01T10:00:00.000Z"
+    },
+    {
+      "id": "item-b01",
+      "projectId": "proj-beta",
+      "type": "decision",
+      "content": "Beta project uses a separate budget model.",
+      "tags": [],
+      "pinned": false,
+      "archived": false,
+      "createdAt": "2026-01-02T01:00:00.000Z",
+      "updatedAt": "2026-01-02T01:00:00.000Z"
+    },
+    {
+      "id": "item-b02",
+      "projectId": "proj-beta",
+      "type": "fact",
+      "content": "Beta project exists to prove per-project search scoping.",
+      "tags": ["scope"],
+      "pinned": false,
+      "archived": false,
+      "createdAt": "2026-01-02T02:00:00.000Z",
+      "updatedAt": "2026-01-02T02:00:00.000Z"
+    }
+  ]
+}
