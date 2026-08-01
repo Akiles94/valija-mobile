@@ -1,0 +1,14 @@
+# Compile flags for the vendored phc-winner-argon2, read by both the Android CMake build and
+# the iOS Exec task. Kept beside gradle/native-defines.txt (the sqlite3mc flags) so neither
+# platform can drift from the other.
+-O3
+-DNDEBUG
+# parallelism is 1 in the vault header, so no pthread dependency is needed. This also removes
+# the only thing that would have needed a thread library on the iOS link.
+-DARGON2_NO_THREADS
+# SQLite3MultipleCiphers embeds its own copy of Argon2 for its KDF options. Almost all of it is
+# static, but `FLAG_clear_internal_memory` is a global `int` in both copies, so linking the two
+# together fails with "multiple definition". Renaming ours at compile time is the portable fix:
+# it needs no linker flags (--allow-multiple-definition is GNU-ld-only and wrong on Apple ld)
+# and no edit to the vendored sources. Verified by a real link on Linux/x86_64.
+-DFLAG_clear_internal_memory=valija_argon2_clear_internal_memory
