@@ -76,6 +76,22 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+
+        // Deliberately NOT `named("iosTest")`: that shared intermediate source set is created by
+        // Kotlin's default hierarchy template, which applies after this block finishes
+        // evaluating, so referencing it by name here throws "KotlinSourceSet ... not found" --
+        // caught by a real CI run, not a local one, since this sandbox cannot configure
+        // androidTarget() at all (see the session's earlier note on the blocked Google Maven).
+        // The two concrete per-target test source sets always exist immediately once their
+        // targets are declared above, independent of the hierarchy template, so both source
+        // directories (the committed test file's own conventional directory, and the generated
+        // fixtures path) are wired to each of them directly.
+        val iosArm64Test by getting
+        val iosSimulatorArm64Test by getting
+        listOf(iosArm64Test, iosSimulatorArm64Test).forEach { sourceSet ->
+            sourceSet.kotlin.srcDir("src/iosTest/kotlin")
+            sourceSet.kotlin.srcDir(generateTestFixturesPath)
+        }
     }
 }
 
